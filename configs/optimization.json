@@ -1,0 +1,22 @@
+{
+  "weight_decay": 0.01,
+  "max_grad_norm": 1.0,
+  "accumulation_steps": 1,
+  "learning_rates": {
+    "base": {
+      "encoders": 0.0002,
+      "predictors": 0.0003
+    },
+    "error": 0.0005,
+    "initialization": 0.0003,
+    "gate_warmup": 0.0003,
+    "refinement": 0.0001,
+    "calibration": 0.0001,
+    "fusion": 0.0001
+  },
+  "loss": {
+    "beta": 0.5,
+    "tau_e": 1.0,
+    "lambda_alpha": 0.001
+  }
+}

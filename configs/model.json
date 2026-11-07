@@ -1,0 +1,63 @@
+{
+  "backbone": {
+    "hidden_dim": 128,
+    "dropout": 0.1,
+    "predictor_hidden": 64,
+    "error_hidden": 64,
+    "layers": 2,
+    "heads": 4,
+    "ffn_dim": 256,
+    "conv_kernel": 3,
+    "max_position": 1024,
+    "output_activation": "identity"
+  },
+  "refinement": {
+    "alpha_max": 0.3,
+    "embedding_dim": 4,
+    "gate_hidden": 16,
+    "gate_bias": -2.0
+  },
+  "fusion": {
+    "attention_dim": 128,
+    "heads": 4,
+    "fusion_hidden": 128,
+    "dropout": 0.1
+  },
+  "evidence": {
+    "scales": {
+      "text": [2, 3, 4],
+      "audio": [4, 8],
+      "vision": [4, 8]
+    },
+    "global": {
+      "enabled": true,
+      "modalities": ["audio", "vision"]
+    }
+  },
+  "factor_bank": {
+    "feature_source": "early",
+    "min_unique_sample_support": 5,
+    "min_unique_video_support": 2,
+    "max_windows_per_sample": 4,
+    "max_fit_evidence": 5000,
+    "kmedoids_iterations": 20,
+    "presence_similarity_quantile": 0.1,
+    "seed": 0
+  },
+  "references": {
+    "max_per_actual_length": 4096,
+    "weak_margin": 0.05,
+    "boundary_top_k": 16,
+    "boundary_weight": 0.1
+  },
+  "audit": {
+    "eta": 0.2,
+    "tau_u": 0.5,
+    "validity": {
+      "min_target_reduction": 0.0,
+      "max_off_target_input_error": 0.0,
+      "max_coverage": 0.5,
+      "max_off_target_hidden_drift": 0.25
+    }
+  }
+}
