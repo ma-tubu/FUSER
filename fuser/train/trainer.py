@@ -10,7 +10,7 @@ from .losses import normalized_error_targets, refinement_loss, reliability_loss,
 
 
 class Trainer:
-    """Optimize one selected phase using caller-supplied feature batches."""
+    """Phase-specific optimization with gradient accumulation."""
 
     def __init__(self, model: UnimodalBackbone | FUSER, optimizer, config: dict):
         self.model, self.optimizer = model, optimizer

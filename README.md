@@ -4,8 +4,6 @@
 
 <h3>Factor-Utilization-Guided Selective Evidence Refinement<br>for Reliable Multimodal Sentiment Analysis</h3>
 
-<p><strong>Discover factors · Audit predictive dependence · Learn selective adjustments</strong></p>
-
 <p>Xiaoran Kou · Dingkang Yang · Jingyi Wu · Yang Liu · Jiangchuan Liu · Hong Chen</p>
 
 <p>
@@ -30,27 +28,19 @@
 <p align="center">
   <img src="assets/images/fig2.png" width="1100" alt="FUSER: factor discovery, utilization auditing, selective refinement and reliability-calibrated fusion">
   <br>
-  <sub>From localized factors to selective refinement and post-refinement reliability.</sub>
+  <sub>Overview of the FUSER framework.</sub>
 </p>
 
 ---
 
 ## Overview
 
-Reliable multimodal sentiment prediction depends on the evidence behind a decision.
-A confident modality can still rely on incidental patterns, while a highly influential factor
-can carry useful affective information.
+FUSER models sentiment from text, audio, and visual features. It discovers recurring local
+patterns, measures their influence with fixed unimodal predictors, and learns bounded feature
+updates. Reliability is recalibrated on the updated features before directed cross-modal fusion.
 
-**FUSER connects factor-level utilization auditing with task-guided selective refinement.**
-It discovers recurring patterns, measures how a fixed predictor responds to localized
-interventions, and learns bounded representation adjustments. Reliability is then recalibrated
-on the refined representations before directed cross-modal fusion.
-
-> **Core idea**
->
-> Predictive reliability estimates how trustworthy a modality is. Factor utilization measures
-> how strongly a particular factor affects its prediction. The sentiment objective guides
-> whether, and how much, that evidence should be adjusted.
+A high utilization score can reflect an incidental pattern or useful affective evidence.
+FUSER learns the refinement strength from the sentiment objective.
 
 <p align="center">
   <img src="assets/images/fig1.png" width="480" alt="Motivation: reliability and evidence dependence provide different information">
@@ -98,7 +88,7 @@ FUSER consists of four components:
 | **03** | **Utilization-informed selective refinement** | Form a support-masked counterfactual direction and learn its bounded coefficient from sentiment prediction. |
 | **04** | **Reliability-calibrated multimodal fusion** | Re-estimate reliability on refined features, weight six directed attention branches by source reliability, and regress sentiment. |
 
-### From dependence to a learned adjustment
+### Utilization and refinement
 
 The audit measures a factor's predictive influence:
 
@@ -114,9 +104,8 @@ $$
 \qquad 0 \leq \alpha_m \leq \alpha_{\max}.
 $$
 
-Strong utilization can arise from useful affective cues. The coefficient is therefore learned
-through the sentiment objective, with a regularizer that penalizes unnecessary refinement.
-When no admissible factor is available, the representation remains unchanged.
+The gate is trained with the sentiment loss and a squared-coefficient penalty.
+Inadmissible interventions produce zero refinement.
 
 <details>
 <summary><strong>View the reliability and evidence-dependence perspective</strong></summary>
@@ -125,9 +114,8 @@ When no admissible factor is available, the representation remains unchanged.
   <img src="assets/images/fig3.png" width="820" alt="Conceptual reliability-guidance, shortcut and affective-evidence pathways">
 </p>
 
-This conceptual view distinguishes modality-level reliability from factor-level evidence
-dependence. The interventions audit model responses in feature space; the resulting patterns
-are candidate factors rather than independently verified causal variables.
+The diagram separates modality reliability from dependence on local factors.
+Audits measure predictor sensitivity to localized feature-space interventions.
 
 </details>
 
@@ -140,10 +128,6 @@ are candidate factors rather than independently verified causal variables.
   <br>
   <sub>Local evidence grouped by factor assignment, shown separately for text, audio and vision.</sub>
 </p>
-
-Factor discovery provides recurring patterns and their supports. Utilization auditing then
-examines how a predictor responds to interventions on a matched pattern. This separation
-allows the gate to account for both structural admissibility and downstream correction utility.
 
 ## Quick start
 
@@ -159,44 +143,6 @@ Python **3.10+** and PyTorch **2.5+** are required. The reference software confi
 PyTorch **2.6.0**. Install the PyTorch build appropriate for your hardware before installing
 the package if you need CUDA support.
 
-### Check the model interface
-
-The following example uses small random feature tensors to check the forward interface.
-It constructs the fusion-initialization phase; input feature dimensions and temporal lengths
-are supplied explicitly.
-
-```python
-import torch
-
-from fuser.utils import build_backbone, build_model, load_config
-
-config = load_config("configs/model.json")
-feature_dims = {"text": 8, "audio": 6, "vision": 4}
-backbone = build_backbone(feature_dims, config)
-model = build_model(backbone, config)
-model.set_phase("initialization")
-model.eval()
-
-inputs = {
-    "text_features": torch.randn(2, 5, 8),
-    "attention_mask": torch.ones(2, 5, dtype=torch.bool),
-    "audio": torch.randn(2, 7, 6),
-    "audio_mask": torch.ones(2, 7, dtype=torch.bool),
-    "vision": torch.randn(2, 4, 4),
-    "vision_mask": torch.ones(2, 4, dtype=torch.bool),
-}
-
-with torch.no_grad():
-    prediction = model(inputs)["prediction"]
-
-print(prediction.shape)  # torch.Size([2])
-```
-
-For factor auditing, fit `FactorBank` and `ReferencePool` on training evidence and attach
-the resulting `FactorAuditor`. The configuration factory
-`build_auditor(training_evidence, config, prototype_budget)` constructs these components
-with an explicit prototype budget.
-
 ### Configuration guide
 
 | Configuration | Controls |
@@ -208,6 +154,11 @@ The shared architecture uses **128-dimensional representations**, **two** acoust
 Transformer layers, **four** attention heads, and a **16-unit** refinement gate with a
 **four-dimensional** modality embedding. Input dimensions, prototype budgets and numerical
 settings remain configurable. Each modality preserves its own valid-position mask.
+
+For factor auditing, fit `FactorBank` and `ReferencePool` on training evidence and attach
+the resulting `FactorAuditor`. The configuration factory
+`build_auditor(training_evidence, config, prototype_budget)` constructs these components
+with an explicit prototype budget.
 
 ## Training
 
@@ -245,7 +196,7 @@ FUSER/
 
 ## Citation
 
-If this work is useful to your research, please cite:
+If you use FUSER, please cite:
 
 ```bibtex
 @misc{kou2026fuser,
@@ -264,10 +215,3 @@ For questions about the method or implementation:
 
 - **Xiaoran Kou:** [2451806@tongji.edu.cn](mailto:2451806@tongji.edu.cn)
 - **Yang Liu:** [yangliu25@tongji.edu.cn](mailto:yangliu25@tongji.edu.cn)
-
----
-
-<div align="center">
-  <strong>FUSER</strong><br>
-  <sub>Factor-level auditing · Selective refinement · Recalibrated fusion</sub>
-</div>
