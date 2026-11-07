@@ -227,63 +227,18 @@ Factor-bank construction and discrete auditing take place after unimodal fitting
 After the gate converges, fit the post-refinement error heads on the resulting representations
 and call `complete_calibration()`. Final fusion requires fitted post-refinement heads.
 
-### Training with supplied feature batches
-
-Given a fitted backbone, training factor bank and corresponding audits, select the phase
-before constructing its optimizer and trainer:
-
-```python
-from fuser.train import Trainer, build_optimizer
-from fuser.utils import load_config
-
-optimization = load_config("configs/optimization.json")
-model.set_phase("refinement")
-optimizer = build_optimizer(model, optimization)
-trainer = Trainer(model, optimizer, optimization)
-
-trainer.train_batch(inputs, labels, audits=audits)
-trainer.flush()
-```
-
-- **Task learning:** Smooth-L1 sentiment loss plus a mean-squared refinement-coefficient penalty.
-- **Error estimation:** Mean-squared loss against `tanh(abs(prediction - label) / tau_e)` targets.
-- **Accumulation:** Sample-weighted gradients with support for a partial final window through `flush()`.
-- **Phase transitions:** Create a new optimizer and trainer after changing the phase.
-- **Training-only supervision:** Externally normalized out-of-fold or held-out error targets can be passed through `error_targets`.
-
-The detailed [method and API reference](docs/method.md) describes tensor shapes, masks,
-audit normalization, cached-audit checks, calibration and checkpoint restoration.
-
 ## Project structure
 
 ```text
 FUSER/
 ├── fuser/
-│   ├── models/
-│   │   ├── backbone.py        # Unimodal encoders and prediction/error heads
-│   │   ├── encoders.py        # Cached text projection and temporal encoders
-│   │   ├── evidence.py        # Structured evidence extraction
-│   │   ├── factors.py         # Cosine K-medoids and factor localization
-│   │   ├── audit.py           # Reference retrieval, intervention and utilization
-│   │   ├── refinement.py      # Bounded, utilization-informed refinement
-│   │   ├── reliability.py     # Post-refinement error estimation
-│   │   ├── attention.py       # Six directed cross-modal interactions
-│   │   ├── fusion.py          # Reliability-weighted sentiment regression
-│   │   ├── records.py         # Evidence and factor records
-│   │   └── model.py           # FUSER composition and phase control
-│   ├── train/
-│   │   ├── losses.py          # Unimodal, error-estimation and refinement losses
-│   │   ├── optim.py           # Phase-specific AdamW construction
-│   │   └── trainer.py         # Training steps and gradient accumulation
-│   └── utils/
-│       ├── config.py          # Configuration loading and component factories
-│       └── tensors.py         # Nested tensor device transfer
-├── configs/                  # Shared model and optimization settings
+│   ├── models/       # Model components
+│   ├── train/        # Losses, optimization and training steps
+│   └── utils/        # Configuration and tensor helpers
+├── configs/          # Model and optimization settings
 ├── assets/
-│   ├── images/               # PNG figures for documentation
-│   └── figures/              # Original vector figures
-├── docs/
-│   └── method.md             # Method and API reference
+│   ├── images/       # README figures
+│   └── figures/      # Original vector figures
 ├── pyproject.toml
 └── requirements.txt
 ```
